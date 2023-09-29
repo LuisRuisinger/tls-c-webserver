@@ -9,55 +9,13 @@
 
 #include "tpool.h"
 #include "client.h"
+#include "serve.h"
 
 #define PORT 8080 // might change this later to 80 ?
-#define BUFFER_SIZE 4096
+#define BACKLOG 16
 
 pthread_mutex_t mutex;
 bool flag;
-
-char resp[] = "HTTP/1.0 200 OK\r\n"
-              "Server: webserver-c\r\n"
-              "Content-type: text/html\r\n\r\n"
-              "<html>hello, world</html>\r\n";
-
-static void response(client* cur)
-{
-    write(cur->fd, resp, strlen(resp));
-    close(cur->fd);
-}
-
-static void* serve(void* args)
-{
-    char* buffer;
-    ssize_t rval;
-    ssize_t total = 0;
-
-    client cur = *(client*) args;
-    free(args);
-
-    buffer = calloc(BUFFER_SIZE, sizeof(char));
-
-    while ((rval = read(cur.fd, buffer + total, BUFFER_SIZE - total)) > 0)
-    {
-        total += rval;
-        if (strstr(buffer, "\r\n\r\n") != NULL)
-            break;
-    }
-
-    if (rval == -1)
-    {
-        free(buffer);
-        close(cur.fd);
-        return NULL;
-    }
-
-    fprintf(stdout, "%s\n\n", buffer);
-
-    response(&cur);
-    return NULL;
-}
-
 
 static void* run(void* args)
 {
@@ -109,7 +67,7 @@ static void* run(void* args)
 
     // creates a thread pool with the size: amount cores + 1
     thread_pool = tpool_create(sysconf(_SC_NPROCESSORS_CONF) + 1);
-    listen(server_fd, 16);
+    listen(server_fd, BACKLOG);
 
     fprintf(stdout, "--- server online ---\n");
     fprintf(stdout, "--- ------------- ---\n");
@@ -129,31 +87,27 @@ static void* run(void* args)
         if (select(server_fd + 1, &readfds, NULL, NULL, &timeout) == 0)
             continue;
 
-        memset(&client_sock, 0, sizeof(client_sock));
+        int32_t pending = select(server_fd + 1, &readfds, NULL, NULL, &timeout);
+        for (int32_t n = 0; n < pending; n++)
+        {
+            memset(&client_sock, 0, sizeof(client_sock));
 
-        if ((fd_client = accept(server_fd, (struct sockaddr*) &client_sock, &client_size)) == -1)
-            continue;
+            if ((fd_client = accept(server_fd, (struct sockaddr*) &client_sock, &client_size)) == -1)
+                continue;
 
-        if ((getsockname(fd_client, (struct sockaddr*) &client_sock, &client_size)) == -1)
-            continue;
+            if ((getsockname(fd_client, (struct sockaddr*) &client_sock, &client_size)) == -1)
+                continue;
 
-        char ip_str[INET6_ADDRSTRLEN];
-        inet_ntop(AF_INET6, &(client_sock.sin6_addr), ip_str, INET6_ADDRSTRLEN);
+            // freeing this must happen inside the serve function
+            // for hardkill and softkill !!!
+            client* inf = calloc(1, sizeof(client));
 
-        fprintf(stdout, "--- connecting ---\n");
-        fprintf(stdout, "--- ------------- ---\n");
-        fprintf(stdout, "--- ip : %s ---\n", ip_str);
-        fprintf(stdout, "--- port : %hu ---\n\n", ntohs(client_sock.sin6_port));
+            inf->fd = fd_client;
+            inf->sin6_addr = client_sock.sin6_addr;
+            inf->sin6_port = client_sock.sin6_port;
 
-        // freeing this must happen inside the serve function
-        // for hardkill and softkill !!!
-        client* inf = calloc(1, sizeof(client));
-
-        inf->fd = fd_client;
-        inf->sin6_addr = client_sock.sin6_addr;
-        inf->sin6_port = client_sock.sin6_port;
-
-        tpool_add_work(thread_pool, (thread_func_t) &serve, inf);
+            tpool_add_work(thread_pool, (thread_func_t) &serve, inf);
+        }
     }
 
     pthread_mutex_unlock(&mutex);
