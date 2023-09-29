@@ -15,7 +15,7 @@
 static char resp[] = "HTTP/1.0 200 OK\r\n"
                      "Server: webserver-c\r\n"
                      "Content-type: text/html\r\n\r\n"
-                     "<html>hello, world</html>\r\n";
+                     "<html>hello, gugu</html>\r\n";
 
 static void response(client* cur)
 {
@@ -25,16 +25,15 @@ static void response(client* cur)
 
 void* serve(void* args)
 {
-    char* buffer;
     ssize_t rval;
     ssize_t total = 0;
 
     client cur = *(client*) args;
     free(args);
 
-    buffer = calloc(BUFFER_SIZE, sizeof(char));
+    char* buffer = calloc(BUFFER_SIZE, sizeof(char));
 
-    while ((rval = read(cur.fd, buffer + total, BUFFER_SIZE - total)) > 0)
+    while ((rval = read(cur.fd, buffer + total, BUFFER_SIZE - total)) != -1)
     {
         total += rval;
         if (strstr(buffer, "\r\n\r\n") != NULL)
@@ -43,13 +42,17 @@ void* serve(void* args)
 
     if (rval == -1)
     {
+        fprintf(stderr, "read error for client : %d", cur.fd);
         free(buffer);
         close(cur.fd);
         return NULL;
     }
 
-    fprintf(stdout, "%s\n\n", buffer);
-
     response(&cur);
+
+    // cach
+
+    free(buffer);
+    close(cur.fd);
     return NULL;
 }

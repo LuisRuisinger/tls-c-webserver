@@ -15,7 +15,7 @@
 #define BACKLOG 16
 
 pthread_mutex_t mutex;
-bool flag;
+volatile bool flag;
 
 static void* run(void* args)
 {
