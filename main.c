@@ -10,10 +10,63 @@
 #include "tpool.h"
 #include "client.h"
 
+#define PORT 8080 // might change this later to 80 ?
+#define BUFFER_SIZE 4096
+
 pthread_mutex_t mutex;
 bool flag;
 
-static void* serve(void* args) {}
+char resp[] = "HTTP/1.0 200 OK\r\n"
+              "Server: webserver-c\r\n"
+              "Content-type: text/html\r\n\r\n"
+              "<html>hello, world</html>\r\n";
+
+static void response(client* cur)
+{
+    write(cur->fd, resp, strlen(resp));
+    close(cur->fd);
+}
+
+static void* serve(void* args)
+{
+    char* buffer;
+    ssize_t rval;
+    size_t total = 0; // To keep track of the total bytes read
+
+    client cur = *(client*) args;
+    free(args);
+
+    char ip_str[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(cur.sin6_addr), ip_str, INET6_ADDRSTRLEN);
+
+    buffer = calloc(BUFFER_SIZE, sizeof(char));
+
+    fprintf(stdout, "--- serving ---\n");
+    fprintf(stdout, "--- ------- ---\n");
+    fprintf(stdout, "--- ip : %s ---\n", ip_str);
+    fprintf(stdout, "--- portn : %hu ---\n\n", ntohs(cur.sin6_port));
+
+    while ((rval = read(cur.fd, buffer + total, BUFFER_SIZE - total)) > 0)
+    {
+        total += rval;
+        if (strstr(buffer, "\r\n\r\n") != NULL)
+            break;
+    }
+
+    if (rval == -1)
+    {
+        free(buffer);
+        close(cur.fd);
+        return NULL;
+    }
+
+    // Print the entire HTTP request
+    fprintf(stdout, "%s\n\n", buffer);
+
+    response(&cur);
+    return NULL;
+}
+
 
 static void* run(void* args)
 {
@@ -43,17 +96,17 @@ static void* run(void* args)
 
     memset(&server_sock, 0, sizeof(server_sock));
     server_sock.sin6_family = AF_INET6;
-    server_sock.sin6_port = htons(80);
+    server_sock.sin6_port = htons(PORT);
 
     // using the ip in args
-    if (inet_pton(AF_INET, (char*) args, &server_sock.sin6_addr) != 1)
+    if (inet_pton(AF_INET6, (char*) args, &server_sock.sin6_addr) != 1)
     {
         perror("ip parsing failed");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    if (bind(server_fd, (struct sockaddr*)&server_sock, sizeof(server_sock)) == -1)
+    if (bind(server_fd, (struct sockaddr*) &server_sock, sizeof(server_sock)) == -1)
     {
         perror("bind");
         close(server_fd);
@@ -65,7 +118,9 @@ static void* run(void* args)
     listen(server_fd, 16);
 
     fprintf(stdout, "--- server online ---\n");
-    fprintf(stdout, "--- %s ---\n", (char*) args);
+    fprintf(stdout, "--- ------------- ---\n");
+    fprintf(stdout, "--- ip : %s ---\n", (char*) args);
+    fprintf(stdout, "--- port : %hu ---\n\n", ntohs(server_sock.sin6_port));
 
     while (1)
     {
@@ -76,7 +131,20 @@ static void* run(void* args)
 
         // reseting client struct
         memset(&client_sock, 0, sizeof(client_sock));
-        fd_client = accept(server_fd, (struct sockaddr *) &client_sock, &client_size);
+
+        if ((fd_client = accept(server_fd, (struct sockaddr*) &client_sock, &client_size)) == -1)
+            continue;
+
+        if ((getsockname(fd_client, (struct sockaddr*) &client_sock, &client_size)) == -1)
+            continue;
+
+        char ip_str[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, &(client_sock.sin6_addr), ip_str, INET6_ADDRSTRLEN);
+
+        fprintf(stdout, "--- connecting ---\n");
+        fprintf(stdout, "--- ------------- ---\n");
+        fprintf(stdout, "--- ip : %s ---\n", ip_str);
+        fprintf(stdout, "--- port : %hu ---\n\n", ntohs(client_sock.sin6_port));
 
         // freeing this must happen inside the serve function
         // for hardkill and softkill !!!
@@ -90,7 +158,6 @@ static void* run(void* args)
     }
 
     pthread_mutex_unlock(&mutex);
-
     tpool_destroy(thread_pool);
     close(server_fd);
 
