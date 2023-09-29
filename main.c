@@ -31,20 +31,12 @@ static void* serve(void* args)
 {
     char* buffer;
     ssize_t rval;
-    size_t total = 0; // To keep track of the total bytes read
+    ssize_t total = 0;
 
     client cur = *(client*) args;
     free(args);
 
-    char ip_str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &(cur.sin6_addr), ip_str, INET6_ADDRSTRLEN);
-
     buffer = calloc(BUFFER_SIZE, sizeof(char));
-
-    fprintf(stdout, "--- serving ---\n");
-    fprintf(stdout, "--- ------- ---\n");
-    fprintf(stdout, "--- ip : %s ---\n", ip_str);
-    fprintf(stdout, "--- portn : %hu ---\n\n", ntohs(cur.sin6_port));
 
     while ((rval = read(cur.fd, buffer + total, BUFFER_SIZE - total)) > 0)
     {
@@ -60,7 +52,6 @@ static void* serve(void* args)
         return NULL;
     }
 
-    // Print the entire HTTP request
     fprintf(stdout, "%s\n\n", buffer);
 
     response(&cur);
@@ -75,7 +66,10 @@ static void* run(void* args)
 
     struct sockaddr_in6 server_sock;
     struct sockaddr_in6 client_sock;
+    struct timeval timeout = {5, 0};
+
     tpool_t* thread_pool;
+    fd_set readfds;
 
     socklen_t client_size = sizeof(client_sock);
 
@@ -124,12 +118,17 @@ static void* run(void* args)
 
     while (1)
     {
+        FD_ZERO(&readfds);
+        FD_SET(server_fd, &readfds);
+
         pthread_mutex_lock(&mutex);
         if (flag)
             break;
         pthread_mutex_unlock(&mutex);
 
-        // reseting client struct
+        if (select(server_fd + 1, &readfds, NULL, NULL, &timeout) == 0)
+            continue;
+
         memset(&client_sock, 0, sizeof(client_sock));
 
         if ((fd_client = accept(server_fd, (struct sockaddr*) &client_sock, &client_size)) == -1)
