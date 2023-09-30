@@ -35,16 +35,12 @@ static uint32_t map_put (char* route, char* file, struct Hashmap* map)
     uint32_t hash = fnv1a_hash(route);
     uint32_t index = hash % map->size;
 
-    fprintf(stderr, "hash calced\n");
-
     if (map->buckets[index] == NULL)
     {
         map->buckets[index] = calloc(1, sizeof(list));
 
         if (map->buckets[index] == NULL)
             return 1;
-
-        fprintf(stderr, "will insert in empty\n");
 
         map->buckets[index]->route = strdup(route);
         map->buckets[index]->file = strdup(file);

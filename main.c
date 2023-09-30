@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     char* args = calloc(strlen(argv[1]) + 1, sizeof(char));
     strcpy(args, argv[1]);
 
-    pthread_create(&runner, NULL, run, args);
+    pthread_create(&runner, NULL, setup, args);
 
     while (1)
         if (fgets(input, sizeof(input), stdin) != NULL && strcmp(input, "kill\n") == 0)
