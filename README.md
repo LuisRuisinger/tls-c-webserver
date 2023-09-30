@@ -6,3 +6,5 @@ Future versions will contain following features:
 - caching of clients for a certain amount of time
 - detection and prevention of mallicious behavior
 - secure connection via SSL or TLS
+- endpoints for REST
+- JSON serialisation and deserialisation
