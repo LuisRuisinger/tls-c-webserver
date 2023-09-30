@@ -1,10 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <pthread.h>
 
 #include "tpool.h"
@@ -28,14 +24,6 @@ int main(int argc, char** argv)
     flag = false;
 
     fprintf(stdout, "--- starting server ---\n");
-
-    map = new(16);
-
-    /*
-    map->put("/", "landing.html", map);
-    map->put("/contact", "contact.html", map);
-    map->put("/work", "work.html", map);
-     */
 
     pthread_t runner;
     char* args = calloc(strlen(argv[1]) + 1, sizeof(char));

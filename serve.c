@@ -66,8 +66,9 @@ static void* serve(void* args)
 
     fprintf(stdout, "%s %s %s\n", method, version, route);
 
-    /*
-    if (map->map_get(route, map) != NULL)
+    // basic routing
+
+    if (map->get(route, map) != NULL)
     {
         write(cur.fd, resp, strlen(resp));
         close(cur.fd);
@@ -75,10 +76,6 @@ static void* serve(void* args)
     else {
         fprintf(stderr, "somehow the route that should exist in the map does not exist there\n");
     }
-     */
-
-    write(cur.fd, resp, strlen(resp));
-    close(cur.fd);
 
     free(buffer);
     free(method);
@@ -102,6 +99,12 @@ void* run(void* args)
     fd_set readfds;
 
     socklen_t client_size = sizeof(client_sock);
+
+    map = new(16);
+
+    map->put("/", "landing.html", map);
+    map->put("/contact", "contact.html", map);
+    map->put("/work", "work.html", map);
 
     if ((server_fd = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
     {
