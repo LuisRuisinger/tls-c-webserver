@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include "../include/filemanager.h"
-#include "../include/serve.h"
 
 char* request_file (char* filename)
 {
