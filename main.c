@@ -43,7 +43,5 @@ int main(int argc, char** argv)
     pthread_join(runner, NULL);
     pthread_mutex_destroy(&mutex);
 
-    free(args);
-
     return EXIT_SUCCESS;
 }

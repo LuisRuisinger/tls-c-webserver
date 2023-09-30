@@ -200,6 +200,9 @@ void* setup(void* args)
     tpool_destroy(thread_pool);
     close(server_fd);
 
+    map->destroy(map);
+
+    free(map);
     free(args);
 
     return NULL;

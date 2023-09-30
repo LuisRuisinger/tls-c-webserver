@@ -109,6 +109,20 @@ static char* map_get (char* route, struct Hashmap* map)
     return NULL;
 }
 
+static void map_destroy(struct Hashmap* map)
+{
+    for (int n = 0; n < map->size; n++)
+    {
+        list* cur = map->buckets[n];
+        while (cur != NULL)
+        {
+            list* ptr = cur;
+            cur = cur->next;
+            free(ptr);
+        }
+    }
+}
+
 hashmap* new(size_t size)
 {
     hashmap* map = calloc(1, sizeof(hashmap));
@@ -119,6 +133,8 @@ hashmap* new(size_t size)
     map->put = map_put;
     map->remove = map_remove;
     map->get = map_get;
+    map->destroy = map_destroy;
+
     map->size = MIN(MINSIZE, size);
     map->buckets = calloc(map->size, sizeof(list*));
 
