@@ -15,15 +15,11 @@
 #include "../include/client.h"
 #include "../include/serve.h"
 #include "../include/hashmap.h"
+#include "../include/filemanager.h"
 
 #define PORT 8080
 #define BACKLOG 16
 #define BUFFER_SIZE 1024
-
-static char resp[] = "HTTP/1.0 200 OK\r\n"
-                     "Server: webserver-c\r\n"
-                     "Content-type: text/html\r\n\r\n"
-                     "<html>hello, gugu</html>\r\n";
 
 pthread_mutex_t mutex;
 volatile bool flag;
@@ -54,32 +50,65 @@ static void* serve(void* args)
 
     if (rval == -1)
     {
-        fprintf(stderr, "read error for client : %d", cur.fd);
+        free(method);
+        free(route);
+        free(version);
         free(buffer);
+
         close(cur.fd);
         return NULL;
     }
 
     if (sscanf(buffer, "%s %s %s", method, route, version) != 3)
+    {
+        free(method);
+        free(route);
+        free(version);
+        free(buffer);
+
+        close(cur.fd);
         return NULL;
+    }
 
     fprintf(stdout, "%s %s %s\n", method, version, route);
 
-    // basic routing
-
-    if (map->get(route, map) != NULL)
+    char* filename = map->get(route, map);
+    if (filename != NULL)
     {
-        write(cur.fd, resp, strlen(resp));
-        close(cur.fd);
-    }
-    else {
-        // return 404 page here
+        char* file = request_file(filename);
+        char* response  = calloc(BUFFER_SIZE * 4, sizeof(char));
+
+        if (response == NULL || file == NULL)
+        {
+            free(method);
+            free(route);
+            free(version);
+            free(buffer);
+
+            close(cur.fd);
+            return NULL;
+        }
+
+        strcat(response, "HTTP/1.0 200 OK\r\n");
+        strcat(response, "Server: webserver-c\r\n");
+
+        if (strstr(route, ".html"))
+            strcat(response, "Content-type: text/html\r\n\r\n");
+        else if (strstr(route, ".js"))
+            strcat(response, "Content-type: text/html\r\n\r\n");
+        else if (strstr(route, ".css"))
+            strcat(response, "Content-type: text/html\r\n\r\n");
+
+        strcat(response, file);
+        strcat(response, "\r\n");
+
+        write(cur.fd, response, strlen(response));
     }
 
-    free(buffer);
     free(method);
     free(route);
     free(version);
+    free(buffer);
 
     close(cur.fd);
     return NULL;
