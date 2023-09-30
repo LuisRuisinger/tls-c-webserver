@@ -8,7 +8,7 @@
 
 #include "../include/filemanager.h"
 
-char* request_file (char* filename)
+char* request_file(char* filename)
 {
     char c;
     FILE* file = fopen(filename, "r");
@@ -20,12 +20,18 @@ char* request_file (char* filename)
     int64_t len = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char* temp = malloc(sizeof(char) * (len + 1));
+    char* str = calloc(len + 2, sizeof(char));
+
+    if (str == NULL)
+    {
+        fclose(file);
+        return NULL;
+    }
 
     int32_t i = 0;
     while((c = (char) fgetc(file)) != EOF)
-        temp[i++] = c;
+        str[i++] = c;
 
     fclose(file);
-    return temp;
+    return str;
 }
