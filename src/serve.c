@@ -11,11 +11,10 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "method.h"
-#include "tpool.h"
-#include "client.h"
-#include "serve.h"
-#include "hashmap.h"
+#include "../include/tpool.h"
+#include "../include/client.h"
+#include "../include/serve.h"
+#include "../include/hashmap.h"
 
 #define PORT 8080
 #define BACKLOG 16

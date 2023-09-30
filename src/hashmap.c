@@ -4,9 +4,8 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
-#include "hashmap.h"
+#include "../include/hashmap.h"
 
 #define MINSIZE 4
 #define MIN(x, y) x > y ? y : x

@@ -4,7 +4,8 @@
 
 #include <pthread.h>
 #include <stdlib.h>
-#include "tpool.h"
+
+#include "../include/tpool.h"
 
 struct tpool_work
 {

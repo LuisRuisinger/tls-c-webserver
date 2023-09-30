@@ -3,9 +3,8 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "tpool.h"
-#include "serve.h"
-#include "hashmap.h"
+#include "../include/tpool.h"
+#include "../include/serve.h"
 
 #define PORT 8080
 #define BACKLOG 16
