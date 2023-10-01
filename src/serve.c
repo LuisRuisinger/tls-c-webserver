@@ -84,6 +84,7 @@ void* run(int32_t server_fd, tpool_t* thread_pool)
             tpool_add_work(thread_pool, (thread_func_t) &serve, inf);
         }
     }
+    return NULL;
 }
 
 void* setup(void* args)
