@@ -73,6 +73,10 @@ static void* serve(void* args)
     fprintf(stdout, "%s %s %s\n", method, version, route);
 
     char* filename = map->get(route, map);
+
+    fprintf(stdout, "requesting file : %s\n", filename);
+
+
     if (filename != NULL)
     {
         char* file = request_file(filename);
@@ -92,13 +96,33 @@ static void* serve(void* args)
         strcat(response, "HTTP/1.0 200 OK\r\n");
         strcat(response, "Server: webserver-c\r\n");
 
-        if (strstr(route, ".html"))
-            strcat(response, "Content-type: text/html\r\n\r\n");
-        else if (strstr(route, ".js"))
-            strcat(response, "Content-type: text/html\r\n\r\n");
-        else if (strstr(route, ".css"))
-            strcat(response, "Content-type: text/html\r\n\r\n");
+        if (strstr(filename, ".html"))
+            strcat(response, "Content-Type: text/html\r\n");
+        else if (strstr(filename, ".js"))
+            strcat(response, "Content-Type: application/javascript\r\n");
+        else if (strstr(filename, ".css"))
+            strcat(response, "Content-Type: text/css\r\n");
 
+        strcat(response, "Content-Length: ");
+
+        char* filelen = calloc(20, sizeof(char));
+
+        if (filelen == NULL)
+        {
+            free(method);
+            free(route);
+            free(version);
+            free(buffer);
+
+            close(cur.fd);
+            return NULL;
+        }
+
+        snprintf(filelen, sizeof(filelen), "%lu", strlen(file) + 1);
+        strcat(response, filelen);
+        free(filelen);
+
+        strcat(response, "\r\n\r\n");
         strcat(response, file);
         strcat(response, "\r\n");
 
@@ -171,9 +195,9 @@ void* setup(void* args)
     tpool_t* thread_pool;
 
     map = new(16);
-    map->put("/", "landing.html", map);
-    map->put("/contact", "contact.html", map);
-    map->put("/work", "work.html", map);
+    map->put("/", "../files/index.html", map);
+    map->put("/script.js", "../files/script.js", map);
+    map->put("/style.css", "../files/style.css", map);
 
     if ((server_fd = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
     {

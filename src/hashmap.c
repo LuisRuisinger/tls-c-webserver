@@ -101,7 +101,9 @@ static char* map_get (char* route, struct Hashmap* map)
     list* cur = map->buckets[index];
     while (cur != NULL)
     {
-        if (*(cur->route) == *route)
+        char* cur_route = (cur->route);
+        if (strlen(cur_route) == strlen(route) &&
+            memcmp(cur_route, route, strlen(route)) == 0)
             return cur->file;
         cur = cur->next;
     }
