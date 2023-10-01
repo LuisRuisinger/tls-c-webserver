@@ -39,8 +39,13 @@ int main(int argc, char** argv)
             break;
         }
 
-    pthread_join(runner, NULL);
-    pthread_mutex_destroy(&mutex);
+    if (pthread_join(runner, NULL) != 0)
+    {
+        fprintf(stderr, "an error occured waiting for the serve thread to terminate\n");
+        pthread_mutex_destroy(&mutex);
+        return EXIT_FAILURE;
+    }
 
+    pthread_mutex_destroy(&mutex);
     return EXIT_SUCCESS;
 }
