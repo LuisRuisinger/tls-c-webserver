@@ -6,9 +6,6 @@
 #include "../include/tpool.h"
 #include "../include/serve.h"
 
-#define PORT 8080
-#define BACKLOG 16
-
 int main(int argc, char** argv)
 {
     char input[256];

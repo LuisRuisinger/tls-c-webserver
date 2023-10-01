@@ -18,9 +18,6 @@
 #include "../include/writehandler.h"
 #include "../include/readhandler.h"
 
-#define PORT 8080
-#define BACKLOG 16
-
 pthread_mutex_t mutex;
 volatile bool flag;
 struct Hashmap* map;
