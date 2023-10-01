@@ -44,7 +44,7 @@ void* run(int32_t server_fd, tpool_t* thread_pool)
     int32_t fd_client;
 
     struct sockaddr_in6 client_sock;
-    struct timeval timeout = {5, 0};
+    struct timeval timeout = {TIMEOUT, 0};
 
     fd_set readfds;
     socklen_t client_size = sizeof(client_sock);
@@ -142,9 +142,10 @@ void* setup(void* args)
 
     fprintf(
             stdout,
-            "server running on %s : %d with initial route %s\n",
+            "server running on %s : %d with initial route %s pointing to %s\n\n",
             (char*) args,
             ntohs(server_sock.sin6_port),
+            "/",
             map->get("/", map)
     );
 
