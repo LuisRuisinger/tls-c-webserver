@@ -15,146 +15,31 @@
 #include "../include/client.h"
 #include "../include/serve.h"
 #include "../include/hashmap.h"
-#include "../include/filemanager.h"
+#include "../include/writehandler.h"
+#include "../include/readhandler.h"
 
 #define PORT 8080
 #define BACKLOG 16
-#define BUFFER_SIZE 1024
 
 pthread_mutex_t mutex;
 volatile bool flag;
 struct Hashmap* map;
 
-static void clean_mem(char** ptr_list, int32_t len)
-{
-    for (int n = 0; n < len; n++)
-        free(ptr_list[n]);
-}
-
-static char* realloc_buffer(char* ptr, int32_t len)
-{
-    char* new_ptr = calloc(BUFFER_SIZE * len, sizeof(char));
-    if (new_ptr == NULL)
-    {
-        free(ptr);
-        return NULL;
-    }
-
-    memcpy(new_ptr, ptr, strlen(ptr));
-    free(ptr);
-    return new_ptr;
-}
-
-static char* read_client(client* client)
-{
-    ssize_t rval;
-    ssize_t total = 0;
-
-    char* buffer  = calloc(BUFFER_SIZE, sizeof(char));
-    char* method  = calloc(BUFFER_SIZE, sizeof(char));
-    char* route   = calloc(BUFFER_SIZE, sizeof(char));
-    char* version = calloc(BUFFER_SIZE, sizeof(char));
-
-    if (buffer == NULL || method == NULL || route == NULL || version == NULL)
-        return NULL;
-
-    int32_t alloc_read = 1;
-    while ((rval = read(client->fd, buffer + total, BUFFER_SIZE * alloc_read - total)) != -1)
-    {
-        total += rval;
-        if (strstr(buffer, "\r\n\r\n") != NULL)
-            break;
-
-        if (total >= BUFFER_SIZE * alloc_read)
-        {
-            buffer = realloc_buffer(buffer, ++alloc_read);
-            if (buffer == NULL)
-                return NULL;
-        }
-    }
-
-    if (rval == -1)
-    {
-        char* arr[] = {method, route, version, buffer};
-        clean_mem(arr, 4);
-        close(client->fd);
-        return NULL;
-    }
-
-    if (sscanf(buffer, "%s %s %s", method, route, version) != 3)
-    {
-        char* arr[] = {method, route, version, buffer};
-        clean_mem(arr, 4);
-        close(client->fd);
-        return NULL;
-    }
-
-    fprintf(stdout, "%s %s %s\n", method, version, route);
-
-    char* filename = map->get(route, map);
-
-    char* arr[] = {method, route, version, buffer};
-    clean_mem(arr, 4);
-
-    fprintf(stdout, "requesting file : %s\n", filename);
-    return filename;
-}
-
-static char* write_client(client* client, char* filename)
-{
-    char* file = request_file(filename);
-    char* response  = calloc(BUFFER_SIZE * 4, sizeof(char));
-
-    if (file == NULL)
-    {
-        if (response != NULL)
-            free(response);
-        close(client->fd);
-        return NULL;
-    }
-
-    strcat(response, "HTTP/1.0 200 OK\r\n");
-    strcat(response, "Server: webserver-c\r\n");
-
-    if (strstr(filename, ".html"))
-        strcat(response, "Content-Type: text/html\r\n");
-    else if (strstr(filename, ".js"))
-        strcat(response, "Content-Type: application/javascript\r\n");
-    else if (strstr(filename, ".css"))
-        strcat(response, "Content-Type: text/css\r\n");
-
-    strcat(response, "Content-Length: ");
-
-    char* file_len = calloc(20, sizeof(char));
-
-    if (file_len == NULL)
-    {
-        free(response);
-        close(client->fd);
-        return NULL;
-    }
-
-    snprintf(file_len, sizeof(file_len), "%lu", strlen(file) + 1);
-    strcat(response, file_len);
-    free(file_len);
-
-    strcat(response, "\r\n\r\n");
-    strcat(response, file);
-    strcat(response, "\r\n");
-
-    write(client->fd, response, strlen(response));
-
-    free(response);
-    return "";
-}
-
 static void* serve(void* args)
 {
-    char* filename = read_client((client*) args);
-    char* res = write_client((client*) args, filename);
+    char* filename = read_client((client*) args, map);
+    if (filename == NULL)
+    {
+        free(args);
+        return NULL;
+    }
 
-    free(args);
-    return NULL;
+    char* res = write_client((client*) args, filename);
+    if (res == NULL)
+    {
+        free(args);
+        return NULL;
+    }
 }
 
 void* run(int32_t server_fd, tpool_t* thread_pool)

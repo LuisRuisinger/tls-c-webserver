@@ -4,6 +4,7 @@
 
 #ifndef WEBSERVER_C_SERVE_H
 #define WEBSERVER_C_SERVE_H
+#define BUFFER_SIZE 1024
 
 pthread_mutex_t mutex;
 volatile bool flag;
