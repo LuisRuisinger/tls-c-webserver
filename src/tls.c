@@ -3,15 +3,9 @@
 //
 
 #include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <signal.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <stdlib.h>
-#include <limits.h>
 
 #include "../include/tls.h"
 
@@ -43,7 +37,7 @@ void configure_context(SSL_CTX *ctx)
 
     if (SSL_CTX_use_PrivateKey_file(ctx, "../certificates/key.pem", SSL_FILETYPE_PEM) <= 0 )
     {
-        fprintf(stderr, "can't use or open cert.pem for private key\n");
+        fprintf(stderr, "can't use or open cert.pem\n");
         ERR_print_errors_fp(stderr);
         exit(EXIT_FAILURE);
     }
