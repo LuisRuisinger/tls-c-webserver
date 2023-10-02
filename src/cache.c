@@ -28,7 +28,7 @@ static void cache_destroy(struct Cache* cache)
 
 }
 
-cache* new(size_t size)
+cache* cache_init(size_t size)
 {
     cache* store = calloc(1, sizeof(cache));
 
