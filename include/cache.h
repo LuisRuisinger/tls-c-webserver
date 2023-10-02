@@ -10,7 +10,7 @@
 typedef struct Cache
 {
     uint32_t (*put)     (client* client, time_t timestamp, struct Cache* cache);
-    void     (*update)  (struct Cache* cache);
+    void*    (*update)  (struct Cache* cache);
     void     (*destroy) (struct Cache* cache);
 
     uint32_t size;

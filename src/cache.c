@@ -6,9 +6,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "../include/cache.h"
 #include "../include/client.h"
+#include "serve.h"
 
 #define MINSIZE 32
 #define MIN(x, y) x > y ? y : x
@@ -18,9 +20,17 @@ static uint32_t cache_put(client* client, time_t timestamp, struct Cache* cache)
     return 0;
 }
 
-static void cache_update(struct Cache* cache)
+static void* cache_update(struct Cache* cache)
 {
+    while(1)
+    {
+        pthread_mutex_lock(&mutex);
+        if (flag)
+            break;
+        pthread_mutex_unlock(&mutex);
 
+        sleep(5);
+    }
 }
 
 static void cache_destroy(struct Cache* cache)

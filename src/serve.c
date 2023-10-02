@@ -18,10 +18,9 @@
 #include "../include/writehandler.h"
 #include "../include/readhandler.h"
 #include "tls.h"
+#include "cache.h"
 
-pthread_mutex_t mutex;
-volatile bool flag;
-struct Hashmap* map;
+struct Cache* pool;
 
 static void* serve(void* args)
 {
@@ -135,28 +134,18 @@ void* setup(void* args)
     server_sock.sin6_family = AF_INET6;
     server_sock.sin6_port = htons(PORT);
 
-    if (inet_pton(AF_INET6, (char*) args, &server_sock.sin6_addr) != 1)
+    if ((inet_pton(AF_INET6, (char*) args, &server_sock.sin6_addr) != 1) ||
+        (bind(server_fd, (struct sockaddr*) &server_sock, sizeof(server_sock)) == -1) ||
+        (listen(server_fd, BACKLOG) == -1))
     {
-        fprintf(stderr, "IP parsing failed\n");
-        close(server_fd);
-        exit(EXIT_FAILURE);
-    }
-
-    if (bind(server_fd, (struct sockaddr*) &server_sock, sizeof(server_sock)) == -1)
-    {
-        fprintf(stderr, "server bind failed\n");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
     thread_pool = tpool_create(sysconf(_SC_NPROCESSORS_CONF) + 1);
 
-    if (listen(server_fd, BACKLOG) == -1)
-    {
-        fprintf(stderr, "server listen failed\n");
-        close(server_fd);
-        exit(EXIT_FAILURE);
-    }
+    pool = cache_init(32);
+    tpool_add_work(thread_pool,(thread_func_t) (pool->update), pool);
 
     fprintf(
             stdout,
