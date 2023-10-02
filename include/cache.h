@@ -17,6 +17,6 @@ typedef struct Cache
     struct Client** elements;
 } cache;
 
-cache* new(size_t size);
+cache* cache_init(size_t size);
 
 #endif //WEBSERVER_C_CACHE_H
