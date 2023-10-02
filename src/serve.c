@@ -17,6 +17,7 @@
 #include "../include/hashmap.h"
 #include "../include/writehandler.h"
 #include "../include/readhandler.h"
+#include "tls.h"
 
 pthread_mutex_t mutex;
 volatile bool flag;
@@ -66,22 +67,38 @@ void* run(int32_t server_fd, tpool_t* thread_pool)
         for (int32_t n = 0; n < pending; n++)
         {
             memset(&client_sock, 0, sizeof(client_sock));
+            client* cur = calloc(1, sizeof(client));
 
-            if ((fd_client = accept(server_fd, (struct sockaddr*) &client_sock, &client_size)) == -1)
+            if ((cur->ctx = create_context()) == NULL)
                 continue;
 
-            if ((getsockname(fd_client, (struct sockaddr*) &client_sock, &client_size)) == -1)
+            configure_context(cur->ctx);
+            cur->ssl = SSL_new(cur->ctx);
+
+            if (((fd_client = accept(server_fd, (struct sockaddr*) &client_sock, &client_size)) == -1) ||
+                ((getsockname(fd_client, (struct sockaddr*) &client_sock, &client_size)) == -1))
+            {
+                SSL_shutdown(cur->ssl);
+                SSL_free(cur->ssl);
+                SSL_CTX_free(cur->ctx);
                 continue;
+            }
 
-            // freeing this must happen inside the serve function
-            // for hardkill and softkill !!!
-            client* inf = calloc(1, sizeof(client));
+            SSL_set_fd(cur->ssl, fd_client);
 
-            inf->fd = fd_client;
-            inf->sin6_addr = client_sock.sin6_addr;
-            inf->sin6_port = client_sock.sin6_port;
+            if (SSL_accept(cur->ssl) <= 0)
+            {
+                SSL_shutdown(cur->ssl);
+                SSL_free(cur->ssl);
+                SSL_CTX_free(cur->ctx);
+                continue;
+            }
 
-            tpool_add_work(thread_pool, (thread_func_t) &serve, inf);
+            cur->fd = fd_client;
+            cur->sin6_addr = client_sock.sin6_addr;
+            cur->sin6_port = client_sock.sin6_port;
+
+            tpool_add_work(thread_pool, (thread_func_t) &serve, cur);
         }
     }
     return NULL;
@@ -96,7 +113,7 @@ void* setup(void* args)
 
     tpool_t* thread_pool;
 
-    map = new(16);
+    map = hashmap_init(16);
     map->put("/", "../files/index.html", map);
     map->put("/script.js", "../files/script.js", map);
     map->put("/style.css", "../files/style.css", map);
