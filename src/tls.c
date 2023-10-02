@@ -43,7 +43,7 @@ void configure_context(SSL_CTX *ctx)
 
     if (SSL_CTX_use_PrivateKey_file(ctx, "../certificates/key.pem", SSL_FILETYPE_PEM) <= 0 )
     {
-        fprintf(stderr, "can't use or open key.pem\n");
+        fprintf(stderr, "can't use or open cert.pem for private key\n");
         ERR_print_errors_fp(stderr);
         exit(EXIT_FAILURE);
     }

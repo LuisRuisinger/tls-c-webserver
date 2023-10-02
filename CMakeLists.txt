@@ -10,7 +10,8 @@ find_package(OpenSSL REQUIRED)
 include_directories(include)
 
 # Add the source files to the executable
-add_executable(webserver_c
+add_executable(
+        webserver_c
         src/main.c
         src/tpool.c
         src/serve.c
