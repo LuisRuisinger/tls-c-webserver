@@ -124,7 +124,7 @@ static void map_destroy(struct Hashmap* map)
     }
 }
 
-hashmap* new(size_t size)
+hashmap* hashmap_init(size_t size)
 {
     hashmap* map = calloc(1, sizeof(hashmap));
 
