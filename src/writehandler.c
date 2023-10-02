@@ -53,7 +53,7 @@ char* write_client(client* client, char* filename)
     strcat(response, file);
     strcat(response, "\r\n");
 
-    write(client->fd, response, strlen(response));
+    SSL_write(client->ssl, response, (int) strlen(response));
 
     free(response);
     return "";
