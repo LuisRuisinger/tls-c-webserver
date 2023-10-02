@@ -18,6 +18,6 @@ typedef struct Hashmap
     struct Linkedlist** buckets;
 } hashmap;
 
-struct Hashmap* new(size_t size);
+struct Hashmap* hashmap_init(size_t size);
 
 #endif //WEBSERVER_C_HASHMAP_H
