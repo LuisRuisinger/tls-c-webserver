@@ -22,24 +22,36 @@
 
 struct Cache* pool;
 
-static void* serve(void* args)
+void* serve(void* args)
 {
     char* filename = read_client((client*) args, map);
     if (filename == NULL)
     {
+        SSL_shutdown(((client*) args)->ssl);
+        SSL_free(((client*) args)->ssl);
+        SSL_CTX_free(((client*) args)->ctx);
         free(args);
         return NULL;
     }
 
     char* res = write_client((client*) args, filename);
-    if (res == NULL)
+    time_t* timestamp = calloc(1, sizeof(time_t));
+
+    if ((res == NULL) || (timestamp == NULL))
     {
+        SSL_shutdown(((client*) args)->ssl);
+        SSL_free(((client*) args)->ssl);
+        SSL_CTX_free(((client*) args)->ctx);
         free(args);
         return NULL;
     }
+
+    *timestamp = time(NULL);
+    pool->put((client*) args, timestamp, pool);
+    return NULL;
 }
 
-void* run(int32_t server_fd, tpool_t* thread_pool)
+void* run(int32_t server_fd)
 {
     int32_t fd_client;
 
@@ -110,8 +122,6 @@ void* setup(void* args)
 
     struct sockaddr_in6 server_sock;
 
-    tpool_t* thread_pool;
-
     map = hashmap_init(16);
     map->put("/", "../files/index.html", map);
     map->put("/script.js", "../files/script.js", map);
@@ -156,15 +166,16 @@ void* setup(void* args)
             map->get("/", map)
     );
 
-    run(server_fd, thread_pool);
+    run(server_fd);
     pthread_mutex_unlock(&mutex);
     tpool_destroy(thread_pool);
     close(server_fd);
 
     map->destroy(map);
+    pool->destroy(pool);
 
     free(map);
-    free(args);
+    free(pool);
 
     return NULL;
 }

@@ -4,24 +4,34 @@
 
 #include <time.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include "../include/cache.h"
-#include "../include/client.h"
 #include "serve.h"
 
 #define MINSIZE 32
 #define MIN(x, y) x > y ? y : x
 
-static uint32_t cache_put(client* client, time_t timestamp, struct Cache* cache)
+static void cache_put(client* client, time_t* timestamp, struct Cache* cache)
 {
-    return 0;
+    pthread_mutex_lock(&(cache->mutex));
+    volatile uint32_t* index = &(cache->index);
+
+    cache->elements[*index] = calloc(1, sizeof(struct Entry));
+    if (cache->elements[*index] == NULL)
+        exit(EXIT_FAILURE);
+
+    cache->elements[*index]->client = client;
+    cache->elements[*index]->timestamp = timestamp;
+
+    *index = (*index + 1) % cache->size;
+    pthread_mutex_unlock(&(cache->mutex));
 }
 
 static void* cache_update(struct Cache* cache)
 {
+    struct timeval timeout = {0, 0};
     while(1)
     {
         pthread_mutex_lock(&mutex);
@@ -29,33 +39,97 @@ static void* cache_update(struct Cache* cache)
             break;
         pthread_mutex_unlock(&mutex);
 
+        time_t timestamp = time(NULL);
+        for (int n = 0; n < cache->size; n++)
+        {
+            if (cache->elements[n] == NULL)
+                continue;
+
+            fd_set readfds;
+            struct Client* client = cache->elements[n]->client;
+            time_t* client_time = cache->elements[n]->timestamp;
+
+            FD_ZERO(&readfds);
+            FD_SET(client->fd, &readfds);
+
+            if (FD_ISSET(client->fd, &readfds) &&
+                (select(client->fd + 1, &readfds, NULL, NULL, &timeout) == 1))
+            {
+                tpool_add_work(thread_pool, (thread_func_t) &serve, client);
+
+                free(cache->elements[n]->timestamp);
+                free((void*) cache->elements[n]);
+
+                cache->elements[n] = NULL;
+            }
+            else if (difftime(timestamp, *client_time) > 25.0)
+            {
+                SSL_shutdown(cache->elements[n]->client->ssl);
+                SSL_free(cache->elements[n]->client->ssl);
+                SSL_CTX_free(cache->elements[n]->client->ctx);
+
+                close(client->fd);
+
+                free(cache->elements[n]->client);
+                free(cache->elements[n]->timestamp);
+                free((void*) cache->elements[n]);
+
+                cache->elements[n] = NULL;
+            }
+        }
         sleep(5);
     }
+    pthread_mutex_unlock(&mutex);
+    return NULL;
 }
 
 static void cache_destroy(struct Cache* cache)
 {
+    for (int n = 0; n < cache->size; n++)
+    {
+        if (cache->elements[n] == NULL)
+            continue;
 
+        SSL_shutdown(cache->elements[n]->client->ssl);
+        SSL_free(cache->elements[n]->client->ssl);
+        SSL_CTX_free(cache->elements[n]->client->ctx);
+
+        close(cache->elements[n]->client->fd);
+
+        free(cache->elements[n]->client);
+        free(cache->elements[n]->timestamp);
+        free((void*) cache->elements[n]);
+
+        cache->elements[n] = NULL;
+    }
+
+    free(cache->elements);
+    pthread_mutex_destroy(&(cache->mutex));
 }
 
 cache* cache_init(size_t size)
 {
-    cache* store = calloc(1, sizeof(cache));
+    cache* pool = calloc(1, sizeof(cache));
 
-    if (store == NULL)
+    if (pool == NULL)
         return NULL;
 
-    store->put = cache_put;
-    store->update = cache_update;
-    store->destroy = cache_destroy;
+    pool->put = cache_put;
+    pool->update = cache_update;
+    pool->destroy = cache_destroy;
 
-    store->size = MIN(MINSIZE, size);
-    store->elements = calloc(store->size, sizeof(client*));
+    pool->size = MIN(MINSIZE, size);
+    pool->index = 0;
 
-    for (int n = 0; n < store->size; n++)
-        *(store->elements + n) = NULL;
+    pool->elements = calloc(pool->size, sizeof(struct Entry*));
+    if (pool->elements == NULL)
+        exit(EXIT_FAILURE);
 
-    return store;
+    for (int n = 0; n < pool->size; n++)
+        *(pool->elements + n) = NULL;
+
+    pthread_mutex_init(&(pool->mutex), NULL);
+    return pool;
 }
 
 
