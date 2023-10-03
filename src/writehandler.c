@@ -53,7 +53,11 @@ char* write_client(client* client, char* filename)
     strcat(response, file);
     strcat(response, "\r\n");
 
-    SSL_write(client->ssl, response, (int) strlen(response));
+    if (client->protocol == HTTPS)
+        SSL_write(client->ssl, response, (int) strlen(response));
+    else {
+        write(client->fd, response, (int) strlen(response));
+    }
 
     free(response);
     return "";

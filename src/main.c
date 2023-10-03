@@ -5,44 +5,20 @@
 
 #include "../include/tpool.h"
 #include "../include/serve.h"
+#include "setup.h"
+#include "hashmap.h"
+#include "run.h"
 
 int main(int argc, char** argv)
 {
-    char input[256];
+    struct Server* server = server_init(HTTP, IPv6, "::1", 8080);
 
-    if (argc != 2)
-    {
-        perror("invalid amount of args");
-        exit(EXIT_FAILURE);
-    }
+    map = hashmap_init(16);
+    map->put("/", "../files/index.html", map);
+    map->put("/script.js", "../files/script.js", map);
+    map->put("/style.css", "../files/style.css", map);
 
-    pthread_mutex_init(&mutex, NULL);
-    flag = false;
+    server_run(server, map);
 
-    fprintf(stdout, "--- starting server ---\n");
-
-    pthread_t runner;
-    char* args = calloc(strlen(argv[1]) + 1, sizeof(char));
-    strcpy(args, argv[1]);
-
-    pthread_create(&runner, NULL, setup, args);
-
-    while (1)
-        if (fgets(input, sizeof(input), stdin) != NULL && strcmp(input, "kill\n") == 0)
-        {
-            pthread_mutex_lock(&mutex);
-            flag = true;
-            pthread_mutex_unlock(&mutex);
-            break;
-        }
-
-    if (pthread_join(runner, NULL) != 0)
-    {
-        fprintf(stderr, "an error occured waiting for the serve thread to terminate\n");
-        pthread_mutex_destroy(&mutex);
-        return EXIT_FAILURE;
-    }
-
-    pthread_mutex_destroy(&mutex);
     return EXIT_SUCCESS;
 }

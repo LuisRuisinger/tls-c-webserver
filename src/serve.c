@@ -107,7 +107,7 @@ void* run(int32_t server_fd)
 
             cur->fd = fd_client;
             cur->sin6_addr = client_sock.sin6_addr;
-            cur->sin6_port = client_sock.sin6_port;
+            cur->sin_port = client_sock.sin6_port;
 
             tpool_add_work(thread_pool, (thread_func_t) &serve, cur);
         }

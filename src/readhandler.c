@@ -77,7 +77,12 @@ char* read_client(client* client, hashmap* map)
         // read error or timeout while slowly reading
         //
 
-        rval = SSL_read(client->ssl, buffer + total, BUFFER_SIZE * alloc_read - total);
+        if (client->protocol == HTTPS)
+            rval = SSL_read(client->ssl, buffer + total, BUFFER_SIZE * alloc_read - total);
+        else {
+            rval = read(client->fd, buffer + total, BUFFER_SIZE * alloc_read - total);
+        }
+
         if (rval == -1 || (int) difftime(start_time, time(NULL)) >= TIMEOUT)
         {
             char* arr[] = {method, route, version, buffer};

@@ -8,10 +8,18 @@
 #include <netinet/in.h>
 #include <openssl/ssl.h>
 
-typedef struct Client {
+#include "setup.h"
+
+typedef struct Client
+{
     int32_t fd;
-    in_port_t sin6_port;
-    struct in6_addr sin6_addr;
+    in_port_t sin_port;
+    union
+    {
+        struct in6_addr sin6_addr;
+        struct in_addr sin_addr;
+    };
+    enum Protocol protocol;
     SSL_CTX* ctx;
     SSL* ssl;
 } client;

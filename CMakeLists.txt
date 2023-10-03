@@ -21,6 +21,13 @@ add_executable(
         src/writehandler.c
         src/cache.c
         src/tls.c
+        src/setup.c
+        include/setup.h
+        src/run.c
+        include/run.h
+        include/requesthandler_arg.h
+        src/requesthandler.c
+        include/requesthandler.h
 )
 
 # Link against OpenSSL
