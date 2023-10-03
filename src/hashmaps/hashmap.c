@@ -201,18 +201,6 @@ hashmap* hashmap_init(size_t size)
         exit(EXIT_FAILURE);
     }
 
-    //
-    // export this
-    //
-
-    map->mime->put("html", "text/html", map->mime);
-    map->mime->put("js", "application/javascript", map->mime);
-    map->mime->put("css", "text/css", map->mime);
-
-    //
-    //
-    //
-
     for (int n = 0; n < map->size; n++)
         *(map->buckets + n) = NULL;
 
