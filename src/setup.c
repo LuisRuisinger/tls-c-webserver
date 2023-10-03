@@ -13,8 +13,6 @@
 
 #include "setup.h"
 
-#define BACKLOG 16
-
 struct Server* server_init(enum Protocol protocol, enum Version version, char* ip, int32_t port)
 {
 

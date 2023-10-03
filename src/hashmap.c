@@ -7,15 +7,18 @@
 #include <stdio.h>
 
 #include "../include/hashmap.h"
+#include "routetype.h"
+#include "method.h"
+#include "filemanager.h"
 
 #define MINSIZE 4
 #define MIN(x, y) x > y ? y : x
 
 typedef struct Linkedlist
 {
-    char* route;
-    char* file;
-
+    char* uri;
+    struct Value* value;
+    enum Method method;
     struct Linkedlist* next;
 } list;
 
@@ -30,46 +33,81 @@ static uint32_t fnv1a_hash(const char *str)
     return hash;
 }
 
-static void map_put(char* route, char* file, struct Hashmap* map)
+static void map_put(
+        char* uri,
+        void* value,
+        enum Method method,
+        enum Route_type type,
+        struct Hashmap* map)
 {
-    uint32_t hash = fnv1a_hash(route);
+    uint32_t hash = fnv1a_hash(uri);
     uint32_t index = hash % map->size;
 
     if (map->buckets[index] == NULL)
     {
-        map->buckets[index] = calloc(1, sizeof(list));
+        map->buckets[index] = malloc(sizeof(struct Linkedlist));
 
         if (map->buckets[index] == NULL)
         {
-            fprintf(stderr, "failed to add route");
+            fprintf(stderr, "failed to add uri");
             exit(EXIT_FAILURE);
         }
 
-        map->buckets[index]->route = strdup(route);
-        map->buckets[index]->file = strdup(file);
-        map->buckets[index]->next = NULL;
+        map->buckets[index]->uri    = strdup(uri);
+        map->buckets[index]->method = method;
+        map->buckets[index]->next   = NULL;
+
+        map->buckets[index]->value = malloc(sizeof(struct Value));
+
+        if (map->buckets[index]->value == NULL)
+        {
+            fprintf(stderr, "failed to add uri");
+            exit(EXIT_FAILURE);
+        }
+
+        map->buckets[index]->value->type = type;
+        if (type == STATICFILE)
+            map->buckets[index]->value->route = strdup((char*) value);
+        else {
+            map->buckets[index]->value->fun = value;
+        }
     }
     else {
         list* cur = map->buckets[index];
         while (cur->next != NULL)
             cur = cur->next;
 
-        cur->next = calloc(1, sizeof(list));
+        cur->next = malloc(sizeof(struct Linkedlist));
         cur = cur->next;
 
         if (cur == NULL)
         {
-            fprintf(stderr, "failed to add route");
+            fprintf(stderr, "failed to add uri");
             exit(EXIT_FAILURE);
         }
 
-        cur->route = strdup(route);
-        cur->file = strdup(file);
-        cur->next = NULL;
+        cur->uri    = strdup(uri);
+        cur->method = method;
+        cur->next   = NULL;
+
+        cur->value = malloc(sizeof(struct Value));
+
+        if (cur->value == NULL)
+        {
+            fprintf(stderr, "failed to add uri");
+            exit(EXIT_FAILURE);
+        }
+
+        cur->value->type = type;
+        if (type == STATICFILE)
+            cur->value->route = strdup((char*) value);
+        else {
+            cur->value->fun = value;
+        }
     }
 }
 
-static char* map_get(char* route, struct Hashmap* map)
+static struct Value* map_get(char* route, struct Hashmap* map)
 {
     uint32_t hash = fnv1a_hash(route);
     uint32_t index = hash % map->size;
@@ -77,10 +115,10 @@ static char* map_get(char* route, struct Hashmap* map)
     list* cur = map->buckets[index];
     while (cur != NULL)
     {
-        char* cur_route = (cur->route);
+        char* cur_route = (cur->uri);
         if (strlen(cur_route) == strlen(route) &&
             memcmp(cur_route, route, strlen(route)) == 0)
-            return cur->file;
+            return cur->value;
         cur = cur->next;
     }
     return NULL;

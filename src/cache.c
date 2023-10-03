@@ -7,8 +7,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "../include/cache.h"
-#include "serve.h"
+#include "cache.h"
+#include "setup.h"
+#include "tpool.h"
 
 #define MINSIZE 32
 #define MIN(x, y) x > y ? y : x
@@ -34,11 +35,6 @@ static void* cache_update(struct Cache* cache)
     struct timeval timeout = {0, 0};
     while(1)
     {
-        pthread_mutex_lock(&mutex);
-        if (flag)
-            break;
-        pthread_mutex_unlock(&mutex);
-
         time_t timestamp = time(NULL);
         for (int n = 0; n < cache->size; n++)
         {
@@ -55,7 +51,7 @@ static void* cache_update(struct Cache* cache)
             if (FD_ISSET(client->fd, &readfds) &&
                 (select(client->fd + 1, &readfds, NULL, NULL, &timeout) == 1))
             {
-                tpool_add_work(thread_pool, (thread_func_t) &serve, client);
+                tpool_add_work(NULL, (thread_func_t) NULL, client);
 
                 free(cache->elements[n]->timestamp);
                 free((void*) cache->elements[n]);

@@ -9,7 +9,7 @@
 
 #include "../include/client.h"
 #include "../include/filemanager.h"
-#include "../include/serve.h"
+#include "setup.h"
 
 char* write_client(client* client, char* filename)
 {

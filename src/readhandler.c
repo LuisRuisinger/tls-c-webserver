@@ -9,8 +9,8 @@
 #include <time.h>
 
 #include "../include/client.h"
-#include "../include/serve.h"
 #include "../include/hashmap.h"
+#include "setup.h"
 
 static void clean_mem(char** ptr_list, int32_t len)
 {
@@ -32,7 +32,7 @@ static char* realloc_buffer(char* ptr, int32_t len)
     return new_ptr;
 }
 
-char* read_client(client* client, hashmap* map)
+struct Value* read_client(client* client, hashmap* map)
 {
     ssize_t rval;
     ssize_t total = 0;
@@ -115,11 +115,16 @@ char* read_client(client* client, hashmap* map)
 
     fprintf(stdout, "request head: %s %s %s\n", method, version, route);
 
-    char* filename = map->get_route(route, map);
+    struct Value* value = map->get_route(route, map);
 
     char* arr[] = {method, route, version, buffer};
     clean_mem(arr, 4);
 
-    fprintf(stdout, "requested file : %s\n\n", filename);
-    return filename;
+    if (value->type == STATICFILE)
+        fprintf(stderr, "requested route : %s\n\n", value->route);
+    else {
+        fprintf(stderr, "requested function\n\n");
+    }
+
+    return value;
 }

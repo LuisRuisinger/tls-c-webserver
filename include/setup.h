@@ -5,6 +5,10 @@
 #ifndef WEBSERVER_C_SETUP_H
 #define WEBSERVER_C_SETUP_H
 
+#define BUFFER_SIZE 1024
+#define BACKLOG 16
+#define TIMEOUT 5
+
 enum Protocol {
     HTTP, HTTPS
 };

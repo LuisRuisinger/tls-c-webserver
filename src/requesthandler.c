@@ -7,13 +7,15 @@
 #include "requesthandler_arg.h"
 #include "readhandler.h"
 #include "writehandler.h"
+#include "hashmap.h"
 
 void* request_handler(void* arg)
 {
     struct Handler_arg* wrapper = (struct Handler_arg*) arg;
 
-    char* filename = read_client(wrapper->client, wrapper->hashmap);
-    if (filename == NULL)
+    struct Value* value = read_client(wrapper->client, wrapper->hashmap);
+
+    if (value->type == STATICFILE && value->route == NULL)
     {
         if (wrapper->client->protocol == HTTPS)
         {
@@ -27,7 +29,8 @@ void* request_handler(void* arg)
         return NULL;
     }
 
-    write_client(wrapper->client, filename);
+    if (value->type == STATICFILE)
+        write_client(wrapper->client, value->route);
 
     if (wrapper->client->protocol == HTTPS)
     {
