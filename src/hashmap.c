@@ -73,7 +73,6 @@ static void map_put(
         map->buckets[index]->uri    = strdup(uri);
         map->buckets[index]->method = method;
         map->buckets[index]->next   = NULL;
-
         map->buckets[index]->value  = malloc(sizeof(struct Value));
 
         if (map->buckets[index]->value == NULL)
@@ -111,7 +110,6 @@ static void map_put(
         cur->uri    = strdup(uri);
         cur->method = method;
         cur->next   = NULL;
-
         cur->value  = malloc(sizeof(struct Value));
 
         if (cur->value == NULL)

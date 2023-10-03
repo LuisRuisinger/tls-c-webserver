@@ -19,7 +19,6 @@ struct Server* server_init(
         char* ip,
         int32_t port
 ){
-
     int32_t opt = 0;
     struct Server* server = malloc(sizeof(struct Server));
 
