@@ -123,6 +123,12 @@ struct Value* read_client(client* client, hashmap* map)
     if (value->type == STATICFILE)
         fprintf(stderr, "requested route : %s\n\n", value->route);
     else {
+
+        //
+        // JSON represented string would overwrite / init "route" here (args instead of route)
+        //
+
+        value->route = "";
         fprintf(stderr, "requested function\n\n");
     }
 

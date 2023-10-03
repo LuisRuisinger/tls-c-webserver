@@ -10,29 +10,35 @@
 #include "../include/client.h"
 #include "../include/filemanager.h"
 #include "setup.h"
+#include "responsetype.h"
 
-char* write_client(client* client, char* filename)
+char* write_client(struct Client* client, char* str_body, enum Response_type type)
 {
-    char* file = request_file(filename);
-    char* response  = calloc(BUFFER_SIZE * 4, sizeof(char));
 
-    if (file == NULL)
+    char* response = calloc(BUFFER_SIZE * 4, sizeof(char));
+    if (str_body == NULL)
     {
         if (response != NULL)
             free(response);
-        close(client->fd);
         return NULL;
     }
 
     strcat(response, "HTTP/1.0 200 OK\r\n");
     strcat(response, "Server: webserver-c\r\n");
 
-    if (strstr(filename, ".html"))
-        strcat(response, "Content-Type: text/html\r\n");
-    else if (strstr(filename, ".js"))
-        strcat(response, "Content-Type: application/javascript\r\n");
-    else if (strstr(filename, ".css"))
-        strcat(response, "Content-Type: text/css\r\n");
+    switch (type) {
+        case HTML:
+            strcat(response, "Content-Type: text/html\r\n");
+            break;
+        case CSS:
+            strcat(response, "Content-Type: text/css\r\n");
+            break;
+        case JS:
+            strcat(response, "Content-Type: application/javascript\r\n");
+            break;
+        case JSON:
+            break;
+    }
 
     strcat(response, "Content-Length: ");
 
@@ -45,12 +51,12 @@ char* write_client(client* client, char* filename)
         return NULL;
     }
 
-    snprintf(file_len, sizeof(file_len), "%lu", strlen(file) + 1);
+    snprintf(file_len, sizeof(file_len), "%lu", strlen(str_body) + 1);
     strcat(response, file_len);
     free(file_len);
 
     strcat(response, "\r\n\r\n");
-    strcat(response, file);
+    strcat(response, str_body);
     strcat(response, "\r\n");
 
     if (client->protocol == HTTPS)

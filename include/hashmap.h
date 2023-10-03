@@ -7,16 +7,16 @@
 
 #include "method.h"
 #include "routetype.h"
+#include "responsetype.h"
 
 struct Linkedlist;
 
 struct Value
 {
+    enum Response_type response;
     enum Route_type type;
-    union {
-        char* route;
-        char* (*fun) (char*);
-    };
+    char* route;
+    char* (*fun) (char*);
 };
 
 typedef struct Hashmap

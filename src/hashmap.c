@@ -10,6 +10,7 @@
 #include "routetype.h"
 #include "method.h"
 #include "filemanager.h"
+#include "responsetype.h"
 
 #define MINSIZE 4
 #define MIN(x, y) x > y ? y : x
@@ -43,6 +44,22 @@ static void map_put(
     uint32_t hash = fnv1a_hash(uri);
     uint32_t index = hash % map->size;
 
+    enum Response_type response;
+
+    if (type == STATICFILE)
+    {
+        if (strstr((char*) value, ".html"))
+            response = HTML;
+        else if (strstr((char*) value, ".css"))
+            response = CSS;
+        else {
+            response = JS;
+        }
+    }
+    else {
+        response = JSON;
+    }
+
     if (map->buckets[index] == NULL)
     {
         map->buckets[index] = malloc(sizeof(struct Linkedlist));
@@ -65,9 +82,14 @@ static void map_put(
             exit(EXIT_FAILURE);
         }
 
-        map->buckets[index]->value->type = type;
+        map->buckets[index]->value->type     = type;
+        map->buckets[index]->value->response = response;
+
         if (type == STATICFILE)
+        {
             map->buckets[index]->value->route = strdup((char*) value);
+            map->buckets[index]->value->fun   = &request_file;
+        }
         else {
             map->buckets[index]->value->fun = value;
         }
@@ -98,9 +120,14 @@ static void map_put(
             exit(EXIT_FAILURE);
         }
 
-        cur->value->type = type;
+        cur->value->type     = type;
+        cur->value->response = response;
+
         if (type == STATICFILE)
+        {
             cur->value->route = strdup((char*) value);
+            cur->value->fun   = &request_file;
+        }
         else {
             cur->value->fun = value;
         }

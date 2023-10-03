@@ -8,6 +8,7 @@
 #include "readhandler.h"
 #include "writehandler.h"
 #include "hashmap.h"
+#include "filemanager.h"
 
 void* request_handler(void* arg)
 {
@@ -29,8 +30,7 @@ void* request_handler(void* arg)
         return NULL;
     }
 
-    if (value->type == STATICFILE)
-        write_client(wrapper->client, value->route);
+    write_client(wrapper->client, value->fun(value->route), value->response);
 
     if (wrapper->client->protocol == HTTPS)
     {
