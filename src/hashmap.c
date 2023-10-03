@@ -74,7 +74,7 @@ static void map_put(
         map->buckets[index]->method = method;
         map->buckets[index]->next   = NULL;
 
-        map->buckets[index]->value = malloc(sizeof(struct Value));
+        map->buckets[index]->value  = malloc(sizeof(struct Value));
 
         if (map->buckets[index]->value == NULL)
         {
@@ -112,7 +112,7 @@ static void map_put(
         cur->method = method;
         cur->next   = NULL;
 
-        cur->value = malloc(sizeof(struct Value));
+        cur->value  = malloc(sizeof(struct Value));
 
         if (cur->value == NULL)
         {
@@ -136,7 +136,7 @@ static void map_put(
 
 static struct Value* map_get(char* route, struct Hashmap* map)
 {
-    uint32_t hash = fnv1a_hash(route);
+    uint32_t hash  = fnv1a_hash(route);
     uint32_t index = hash % map->size;
 
     list* cur = map->buckets[index];
@@ -174,10 +174,10 @@ hashmap* hashmap_init(size_t size)
 
     map->add_route = map_put;
     map->get_route = map_get;
-    map->destroy = map_destroy;
+    map->destroy   = map_destroy;
 
-    map->size = MIN(MINSIZE, size);
-    map->buckets = calloc(map->size, sizeof(list*));
+    map->size      = MIN(MINSIZE, size);
+    map->buckets   = calloc(map->size, sizeof(list*));
 
     for (int n = 0; n < map->size; n++)
         *(map->buckets + n) = NULL;

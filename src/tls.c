@@ -15,7 +15,7 @@ SSL_CTX* create_context()
     SSL_CTX *ctx;
 
     method = TLS_server_method();
-    ctx = SSL_CTX_new(method);
+    ctx    = SSL_CTX_new(method);
 
     if (!ctx)
     {

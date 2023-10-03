@@ -13,8 +13,12 @@
 
 #include "setup.h"
 
-struct Server* server_init(enum Protocol protocol, enum Version version, char* ip, int32_t port)
-{
+struct Server* server_init(
+        enum Protocol protocol,
+        enum Version version,
+        char* ip,
+        int32_t port
+){
 
     int32_t opt = 0;
     struct Server* server = malloc(sizeof(struct Server));
@@ -51,7 +55,7 @@ struct Server* server_init(enum Protocol protocol, enum Version version, char* i
         memset(&sock_addr, 0, sizeof(sock_addr));
 
         sock_addr.sin6_family = AF_INET6;
-        sock_addr.sin6_port = htons(server->port);
+        sock_addr.sin6_port   = htons(server->port);
 
         if (ip == NULL)
             sock_addr.sin6_addr = in6addr_any;
@@ -82,7 +86,7 @@ struct Server* server_init(enum Protocol protocol, enum Version version, char* i
         memset(&sock_addr, 0, sizeof(sock_addr));
 
         sock_addr.sin_family = AF_INET;
-        sock_addr.sin_port = htons(server->port);
+        sock_addr.sin_port   = htons(server->port);
 
         if (ip == NULL)
             sock_addr.sin_addr.s_addr = INADDR_ANY;
