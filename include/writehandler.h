@@ -5,6 +5,6 @@
 #ifndef WEBSERVER_C_WRITEHANDLER_H
 #define WEBSERVER_C_WRITEHANDLER_H
 
-char* write_client(client* client, char* str_body, enum Response_type type);
+char* write_client(struct Client* client, char* str_body, char* mime);
 
 #endif //WEBSERVER_C_WRITEHANDLER_H

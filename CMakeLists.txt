@@ -14,7 +14,7 @@ add_executable(
         webserver_c
         src/main.c
         src/tpool.c
-        src/hashmap.c
+        src/hashmaps/hashmap.c
         src/filemanager.c
         src/readhandler.c
         src/writehandler.c
@@ -23,6 +23,7 @@ add_executable(
         src/setup.c
         src/run.c
         src/requesthandler.c
+        src/hashmaps/hashmap_mime.c
 )
 
 # Link against OpenSSL

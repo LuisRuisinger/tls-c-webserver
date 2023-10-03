@@ -9,7 +9,7 @@
 
 #include "run.h"
 #include "setup.h"
-#include "hashmap.h"
+#include "hashmaps/hashmap.h"
 #include "tpool.h"
 #include "client.h"
 #include "tls.h"

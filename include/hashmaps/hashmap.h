@@ -7,16 +7,15 @@
 
 #include "method.h"
 #include "routetype.h"
-#include "responsetype.h"
 
 struct Linkedlist;
 
 struct Value
 {
-    enum Response_type response;
     enum Route_type type;
     char* route;
     char* (*fun) (char*);
+    char* mime;
 };
 
 typedef struct Hashmap
@@ -27,6 +26,7 @@ typedef struct Hashmap
 
     uint32_t size;
     struct Linkedlist** buckets;
+    struct Hashmap_mime* mime;
 } hashmap;
 
 struct Hashmap* hashmap_init(size_t size);

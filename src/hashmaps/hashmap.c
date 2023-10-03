@@ -6,11 +6,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../include/hashmap.h"
+#include "hashmaps/hashmap.h"
+#include "hashmaps/hashmap_mime.h"
 #include "routetype.h"
 #include "method.h"
 #include "filemanager.h"
-#include "responsetype.h"
 
 #define MINSIZE 4
 #define MIN(x, y) x > y ? y : x
@@ -34,6 +34,20 @@ static uint32_t fnv1a_hash(const char *str)
     return hash;
 }
 
+static char* find_file_ending(char* route)
+{
+    char* delimiter = ".";
+    char* last_occ  = NULL;
+    char* cur_pos   = route;
+
+    while ((cur_pos = strstr(cur_pos, delimiter)) != NULL) {
+        last_occ = cur_pos;
+        cur_pos += strlen(delimiter); // Move past the last_occ occurrence
+    }
+
+    return strdup(++last_occ);
+}
+
 static void map_put(
         char* uri,
         void* value,
@@ -44,20 +58,23 @@ static void map_put(
     uint32_t hash = fnv1a_hash(uri);
     uint32_t index = hash % map->size;
 
-    enum Response_type response;
+    char* response;
 
-    if (type == STATICFILE)
+    if (method == STATICFILE)
     {
-        if (strstr((char*) value, ".html"))
-            response = HTML;
-        else if (strstr((char*) value, ".css"))
-            response = CSS;
-        else {
-            response = JS;
+        char* file_ending = find_file_ending((char*) value);
+
+        if (file_ending == NULL)
+        {
+            fprintf(stderr, "trying to add static file without file ending");
+            exit(EXIT_FAILURE);
         }
+
+        response = map->mime->get(file_ending, map->mime);
+        free(file_ending);
     }
     else {
-        response = JSON;
+        response = strdup("application/json");
     }
 
     if (map->buckets[index] == NULL)
@@ -81,8 +98,8 @@ static void map_put(
             exit(EXIT_FAILURE);
         }
 
-        map->buckets[index]->value->type     = type;
-        map->buckets[index]->value->response = response;
+        map->buckets[index]->value->type = type;
+        map->buckets[index]->value->mime = response;
 
         if (type == STATICFILE)
         {
@@ -94,7 +111,7 @@ static void map_put(
         }
     }
     else {
-        list* cur = map->buckets[index];
+        struct Linkedlist* cur = map->buckets[index];
         while (cur->next != NULL)
             cur = cur->next;
 
@@ -118,8 +135,8 @@ static void map_put(
             exit(EXIT_FAILURE);
         }
 
-        cur->value->type     = type;
-        cur->value->response = response;
+        cur->value->type = type;
+        cur->value->mime = response;
 
         if (type == STATICFILE)
         {
@@ -175,7 +192,26 @@ hashmap* hashmap_init(size_t size)
     map->destroy   = map_destroy;
 
     map->size      = MIN(MINSIZE, size);
-    map->buckets   = calloc(map->size, sizeof(list*));
+    map->buckets   = calloc(map->size, sizeof(struct Linkedlist*));
+    map->mime      = hashmap_mime_init(16);
+
+    if (map->buckets == NULL || map->mime == NULL)
+    {
+        fprintf(stderr, "error allocating memory for members of hashmap");
+        exit(EXIT_FAILURE);
+    }
+
+    //
+    // export this
+    //
+
+    map->mime->put("html", "text/html", map->mime);
+    map->mime->put("js", "application/javascript", map->mime);
+    map->mime->put("css", "text/css", map->mime);
+
+    //
+    //
+    //
 
     for (int n = 0; n < map->size; n++)
         *(map->buckets + n) = NULL;

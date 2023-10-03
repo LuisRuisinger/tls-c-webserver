@@ -10,9 +10,8 @@
 #include "../include/client.h"
 #include "../include/filemanager.h"
 #include "setup.h"
-#include "responsetype.h"
 
-char* write_client(struct Client* client, char* str_body, enum Response_type type)
+char* write_client(struct Client* client, char* str_body, char* mime)
 {
 
     char* response = calloc(BUFFER_SIZE * 4, sizeof(char));
@@ -25,21 +24,9 @@ char* write_client(struct Client* client, char* str_body, enum Response_type typ
 
     strcat(response, "HTTP/1.0 200 OK\r\n");
     strcat(response, "Server: webserver-c\r\n");
-
-    switch (type) {
-        case HTML:
-            strcat(response, "Content-Type: text/html\r\n");
-            break;
-        case CSS:
-            strcat(response, "Content-Type: text/css\r\n");
-            break;
-        case JS:
-            strcat(response, "Content-Type: application/javascript\r\n");
-            break;
-        case JSON:
-            break;
-    }
-
+    strcat(response, "Content-Type: ");
+    strcat(response, mime);
+    strcat(response, "\r\n");
     strcat(response, "Content-Length: ");
 
     char* file_len = calloc(20, sizeof(char));
@@ -66,5 +53,6 @@ char* write_client(struct Client* client, char* str_body, enum Response_type typ
     }
 
     free(response);
+
     return "";
 }

@@ -6,7 +6,7 @@
 #define WEBSERVER_C_READHANDLER_H
 
 #include "client.h"
-#include "hashmap.h"
+#include "hashmaps/hashmap.h"
 
 struct Value* read_client(client* client, hashmap* map);
 

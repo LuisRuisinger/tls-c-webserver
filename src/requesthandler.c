@@ -7,7 +7,7 @@
 #include "requesthandler_arg.h"
 #include "readhandler.h"
 #include "writehandler.h"
-#include "hashmap.h"
+#include "hashmaps/hashmap.h"
 
 void* request_handler(void* arg)
 {
@@ -31,7 +31,7 @@ void* request_handler(void* arg)
     write_client(
             wrapper->client,
             value->fun(value->route),
-            value->response
+            value->mime
     );
 
     if (wrapper->client->protocol == HTTPS)

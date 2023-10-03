@@ -6,7 +6,7 @@
 #define WEBSERVER_C_RUN_H
 
 #include "setup.h"
-#include "hashmap.h"
+#include "hashmaps/hashmap.h"
 
 void server_run(struct Server* server, struct Hashmap* hashmap);
 

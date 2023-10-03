@@ -9,7 +9,7 @@
 #include <time.h>
 
 #include "../include/client.h"
-#include "../include/hashmap.h"
+#include "hashmaps/hashmap.h"
 #include "setup.h"
 
 static void clean_mem(char** ptr_list, int32_t len)
@@ -121,7 +121,7 @@ struct Value* read_client(client* client, hashmap* map)
     clean_mem(arr, 4);
 
     if (value->type == STATICFILE)
-        fprintf(stderr, "requested route : %s\n\n", value->route);
+        fprintf(stdout, "requested route : %s\n\n", value->route);
     else {
 
         //
@@ -129,7 +129,7 @@ struct Value* read_client(client* client, hashmap* map)
         //
 
         value->route = "";
-        fprintf(stderr, "requested function\n\n");
+        fprintf(stdout, "requested function\n\n");
     }
 
     return value;
