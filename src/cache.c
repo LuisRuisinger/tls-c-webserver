@@ -75,7 +75,6 @@ static void* cache_update(struct Cache* cache)
         }
         sleep(5);
     }
-    pthread_mutex_unlock(&mutex);
     return NULL;
 }
 
