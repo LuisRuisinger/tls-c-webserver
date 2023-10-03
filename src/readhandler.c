@@ -115,7 +115,7 @@ char* read_client(client* client, hashmap* map)
 
     fprintf(stdout, "request head: %s %s %s\n", method, version, route);
 
-    char* filename = map->get(route, map);
+    char* filename = map->get_route(route, map);
 
     char* arr[] = {method, route, version, buffer};
     clean_mem(arr, 4);

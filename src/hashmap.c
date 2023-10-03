@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "../include/hashmap.h"
 
@@ -29,7 +30,7 @@ static uint32_t fnv1a_hash(const char *str)
     return hash;
 }
 
-static uint32_t map_put (char* route, char* file, struct Hashmap* map)
+static void map_put(char* route, char* file, struct Hashmap* map)
 {
     uint32_t hash = fnv1a_hash(route);
     uint32_t index = hash % map->size;
@@ -39,7 +40,10 @@ static uint32_t map_put (char* route, char* file, struct Hashmap* map)
         map->buckets[index] = calloc(1, sizeof(list));
 
         if (map->buckets[index] == NULL)
-            return 1;
+        {
+            fprintf(stderr, "failed to add route");
+            exit(EXIT_FAILURE);
+        }
 
         map->buckets[index]->route = strdup(route);
         map->buckets[index]->file = strdup(file);
@@ -54,46 +58,18 @@ static uint32_t map_put (char* route, char* file, struct Hashmap* map)
         cur = cur->next;
 
         if (cur == NULL)
-            return 1;
+        {
+            fprintf(stderr, "failed to add route");
+            exit(EXIT_FAILURE);
+        }
 
         cur->route = strdup(route);
         cur->file = strdup(file);
         cur->next = NULL;
     }
-    return 0;
 }
 
-static uint32_t map_remove (char* route, struct Hashmap* map)
-{
-    uint32_t hash = fnv1a_hash(route);
-    uint32_t index = hash % map->size;
-
-    list* cur = map->buckets[index];
-    list* bef = NULL;
-
-    while (cur != NULL)
-    {
-        if (*(cur->route) == *route)
-        {
-            if (bef != NULL)
-            {
-                bef->next = cur->next;
-                free(cur);
-                return 0;
-            }
-
-            free(cur);
-            map->buckets[index] = NULL;
-            return 0;
-        }
-        bef = cur;
-        cur = cur->next;
-    }
-
-    return 1;
-}
-
-static char* map_get (char* route, struct Hashmap* map)
+static char* map_get(char* route, struct Hashmap* map)
 {
     uint32_t hash = fnv1a_hash(route);
     uint32_t index = hash % map->size;
@@ -131,9 +107,8 @@ hashmap* hashmap_init(size_t size)
     if (map == NULL)
         return NULL;
 
-    map->put = map_put;
-    map->remove = map_remove;
-    map->get = map_get;
+    map->add_route = map_put;
+    map->get_route = map_get;
     map->destroy = map_destroy;
 
     map->size = MIN(MINSIZE, size);

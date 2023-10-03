@@ -123,9 +123,9 @@ void* setup(void* args)
     struct sockaddr_in6 server_sock;
 
     map = hashmap_init(16);
-    map->put("/", "../files/index.html", map);
-    map->put("/script.js", "../files/script.js", map);
-    map->put("/style.css", "../files/style.css", map);
+    map->add_route("/", "../files/index.html", map);
+    map->add_route("/script.js", "../files/script.js", map);
+    map->add_route("/style.css", "../files/style.css", map);
 
     if ((server_fd = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
     {
@@ -163,7 +163,7 @@ void* setup(void* args)
             (char*) args,
             ntohs(server_sock.sin6_port),
             "/",
-            map->get("/", map)
+            map->get_route("/", map)
     );
 
     run(server_fd);
