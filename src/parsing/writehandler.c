@@ -7,11 +7,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../include/client.h"
-#include "../include/filemanager.h"
+#include "client.h"
+#include "filemanager.h"
 #include "setup.h"
+#include "parsing/parserwrapper.h"
 
-char* write_client(struct Client* client, char* str_body, char* mime)
+char* write_client(struct Client* client, char* str_body, char* mime, enum Code code)
 {
 
     char* response = calloc(BUFFER_SIZE * 4, sizeof(char));
@@ -22,7 +23,11 @@ char* write_client(struct Client* client, char* str_body, char* mime)
         return NULL;
     }
 
-    strcat(response, "HTTP/1.0 200 OK\r\n");
+    switch (code) {
+        case OK       : strcat(response, "HTTP/1.0 200 OK\r\n");       break;
+        case NOTFOUND : strcat(response, "HTTP/1.0 404 NOTFOUND\r\n"); break;
+    }
+
     strcat(response, "Server: webserver-c\r\n");
     strcat(response, "Content-Type: ");
     strcat(response, mime);

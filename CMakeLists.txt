@@ -16,14 +16,15 @@ add_executable(
         src/tpool.c
         src/hashmaps/hashmap.c
         src/filemanager.c
-        src/readhandler.c
-        src/writehandler.c
+        src/parsing/readhandler.c
+        src/parsing/writehandler.c
         src/cache.c
         src/tls.c
         src/setup.c
         src/run.c
         src/requesthandler.c
         src/hashmaps/hashmap_mime.c
+        src/parsing/fieldparser.c
 )
 
 # Link against OpenSSL

@@ -8,6 +8,6 @@
 #include "client.h"
 #include "hashmaps/hashmap.h"
 
-struct Value* read_client(client* client, hashmap* map);
+struct Reqparsestruct* read_client(client* client, hashmap* map);
 
 #endif //WEBSERVER_C_READHANDLER_H

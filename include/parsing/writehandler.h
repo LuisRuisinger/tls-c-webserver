@@ -5,6 +5,8 @@
 #ifndef WEBSERVER_C_WRITEHANDLER_H
 #define WEBSERVER_C_WRITEHANDLER_H
 
-char* write_client(struct Client* client, char* str_body, char* mime);
+#include "parserwrapper.h"
+
+char* write_client(struct Client* client, char* str_body, char* mime, enum Code code);
 
 #endif //WEBSERVER_C_WRITEHANDLER_H

@@ -8,9 +8,12 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "../include/client.h"
+#include "client.h"
 #include "hashmaps/hashmap.h"
 #include "setup.h"
+#include "../include/parsing/fieldparser.h"
+#include "parsing/parserwrapper.h"
+#include "filemanager.h"
 
 static void clean_mem(char** ptr_list, int32_t len)
 {
@@ -32,7 +35,7 @@ static char* realloc_buffer(char* ptr, int32_t len)
     return new_ptr;
 }
 
-struct Value* read_client(client* client, hashmap* map)
+struct Reqparsestruct* read_client(client* client, hashmap* map)
 {
     ssize_t rval;
     ssize_t total = 0;
@@ -69,7 +72,6 @@ struct Value* read_client(client* client, hashmap* map)
         {
             char* arr[] = {method, route, version, buffer};
             clean_mem(arr, 4);
-            close(client->fd);
             return NULL;
         }
 
@@ -87,7 +89,6 @@ struct Value* read_client(client* client, hashmap* map)
         {
             char* arr[] = {method, route, version, buffer};
             clean_mem(arr, 4);
-            close(client->fd);
             return NULL;
         }
 
@@ -109,16 +110,72 @@ struct Value* read_client(client* client, hashmap* map)
     {
         char* arr[] = {method, route, version, buffer};
         clean_mem(arr, 4);
-        close(client->fd);
         return NULL;
     }
 
     fprintf(stdout, "request head: %s %s %s\n", method, version, route);
 
+    //
+    // prototyping for field parsing
+    //
+
+    char** fields = parse_fields(buffer);
+    fprintf(stdout, "the auth field : --%s--\n", *fields);
+
     struct Value* value = map->get_route(route, map);
+    struct Reqparsestruct* pstruct = malloc(sizeof(struct Reqparsestruct));
+
+    if (pstruct == NULL)
+    {
+        char* arr[] = {method, route, version, buffer};
+        clean_mem(arr, 4);
+        return NULL;
+    }
+
+    //
+    // prototyping codes
+    //
+
+    pstruct->value = value;
+    pstruct->code  = value == NULL ? NOTFOUND : OK;
+
+    if (fields[2] != NULL)
+        pstruct->isfile = strstr(fields[2], "json") == NULL != 0;
+    else {
+        pstruct->isfile = true;
+    }
+
+    //
+    // prototyping for codes
+    //
 
     char* arr[] = {method, route, version, buffer};
     clean_mem(arr, 4);
+
+    free(fields);
+
+    if (value == NULL)
+    {
+        if (pstruct->isfile)
+        {
+            pstruct->value = malloc(sizeof(struct Value));
+            if (pstruct->value == NULL)
+            {
+                char* arr[] = {method, route, version, buffer};
+                clean_mem(arr, 4);
+                return NULL;
+            }
+
+            pstruct->value       = map->get_route("/notfound", map);
+            pstruct->value->fun  = &request_file;
+            pstruct->value->mime = "text/html";
+        }
+        return pstruct;
+    }
+
+    //
+    //
+    //
 
     if (value->type == STATICFILE)
         fprintf(stdout, "requested route : %s\n\n", value->route);
@@ -132,5 +189,5 @@ struct Value* read_client(client* client, hashmap* map)
         fprintf(stdout, "requested function\n\n");
     }
 
-    return value;
+    return pstruct;
 }

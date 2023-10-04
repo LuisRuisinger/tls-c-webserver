@@ -16,6 +16,7 @@ int main(int argc, char** argv)
     hashmap->add_route("/", "../files/index.html", GET, STATICFILE, hashmap);
     hashmap->add_route("/script.js", "../files/script.js", GET, STATICFILE, hashmap);
     hashmap->add_route("/style.css", "../files/style.css", GET, STATICFILE, hashmap);
+    hashmap->add_route("/notfound", "../files/notfound/notfound.html", GET, STATICFILE, hashmap);
 
     server_run(server_ipv6, hashmap);
     server_destroy(server_ipv6);
