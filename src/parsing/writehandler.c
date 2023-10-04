@@ -12,7 +12,7 @@
 #include "setup.h"
 #include "parsing/parserwrapper.h"
 
-static char* enum_to_string(enum Code code)
+static char* enum_to_string(Code code)
 {
     switch (code) {
         case OK:
@@ -96,7 +96,7 @@ static char* enum_to_string(enum Code code)
     }
 }
 
-int32_t write_client(struct Client* client, char* str_body, char* mime, enum Code code)
+int32_t write_client(struct Client* client, char* str_body, char* mime, Code code)
 {
 
     char* response = calloc(BUFFER_SIZE * 4, sizeof(char));

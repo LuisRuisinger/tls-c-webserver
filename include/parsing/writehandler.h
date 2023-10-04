@@ -7,6 +7,6 @@
 
 #include "parserwrapper.h"
 
-int32_t write_client(struct Client* client, char* str_body, char* mime, enum Code code);
+int32_t write_client(struct Client* client, char* str_body, char* mime, Code code);
 
 #endif //WEBSERVER_C_WRITEHANDLER_H

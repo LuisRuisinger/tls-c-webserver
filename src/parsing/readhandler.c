@@ -35,7 +35,7 @@ static char* realloc_buffer(char* ptr, int32_t len)
     return new_ptr;
 }
 
-struct Reqparsestruct* read_client(client* client, hashmap* map)
+Reqparsestruct* read_client(client* client, hashmap* map)
 {
     ssize_t rval;
     ssize_t total = 0;
@@ -123,7 +123,7 @@ struct Reqparsestruct* read_client(client* client, hashmap* map)
     fprintf(stdout, "the auth field : --%s--\n", *fields);
 
     struct Value* value = map->get_route(route, map);
-    struct Reqparsestruct* pstruct = malloc(sizeof(struct Reqparsestruct));
+    Reqparsestruct* pstruct = malloc(sizeof(Reqparsestruct));
 
     if (pstruct == NULL)
     {

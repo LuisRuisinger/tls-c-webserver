@@ -7,7 +7,8 @@
 
 #include "client.h"
 #include "hashmaps/hashmap.h"
+#include "parserwrapper.h"
 
-struct Reqparsestruct* read_client(client* client, hashmap* map);
+Reqparsestruct* read_client(client* client, hashmap* map);
 
 #endif //WEBSERVER_C_READHANDLER_H
