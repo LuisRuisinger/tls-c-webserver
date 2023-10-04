@@ -137,7 +137,6 @@ struct Reqparsestruct* read_client(client* client, hashmap* map)
     //
 
     pstruct->value = value;
-    pstruct->code  = value == NULL ? NOTFOUND : OK;
 
     if (fields[2] != NULL)
         pstruct->isfile = strstr(fields[2], "json") == NULL != 0;
@@ -156,6 +155,7 @@ struct Reqparsestruct* read_client(client* client, hashmap* map)
 
     if (value == NULL)
     {
+        pstruct->code = NOTFOUND;
         if (pstruct->isfile)
         {
             pstruct->value = malloc(sizeof(struct Value));
@@ -166,10 +166,11 @@ struct Reqparsestruct* read_client(client* client, hashmap* map)
                 return NULL;
             }
 
-            pstruct->value       = map->get_route("/notfound", map);
-            pstruct->value->fun  = &request_file;
-            pstruct->value->mime = "text/html";
+            pstruct->value        = map->get_route("/notfound", map);
+            pstruct->value->fun   = &request_file;
+            pstruct->value->mime  = "text/html";
         }
+
         return pstruct;
     }
 
@@ -178,7 +179,11 @@ struct Reqparsestruct* read_client(client* client, hashmap* map)
     //
 
     if (value->type == STATICFILE)
+    {
+        pstruct->code = OK;
         fprintf(stdout, "requested route : %s\n\n", value->route);
+    }
+
     else {
 
         //

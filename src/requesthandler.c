@@ -33,14 +33,21 @@ void* request_handler(void* arg)
 
     struct Value* value = pstruct->value;
 
+    fprintf(stdout, "code : %d\n", pstruct->code);
+
     if (pstruct->code == NOTFOUND && pstruct->isfile)
+    {
+        fprintf(stdout, "writing with code : %d in notfound file\n", pstruct->code);
         write_client(
                 wrapper->client,
                 value->fun(value->route),
                 value->mime,
                 pstruct->code
         );
+    }
     else if (pstruct->code == NOTFOUND && !pstruct->isfile)
+    {
+        fprintf(stdout, "writing with code : %d in notfound endpoint\n", pstruct->code);
         write_client(
                 wrapper->client,
                 "{\n"
@@ -50,6 +57,7 @@ void* request_handler(void* arg)
                 "application/json",
                 pstruct->code
         );
+    }
     else {
 
         if (value->type == STATICFILE && value->route == NULL)
@@ -65,6 +73,8 @@ void* request_handler(void* arg)
             free(wrapper->client);
             return NULL;
         }
+
+        fprintf(stdout, "writing with code : %d in normal\n", pstruct->code);
 
         write_client(
                 wrapper->client,
