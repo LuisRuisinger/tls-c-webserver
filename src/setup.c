@@ -60,6 +60,7 @@ struct Server* server_init(
             sock_addr.sin6_addr = in6addr_any;
         else if (inet_pton(AF_INET6, ip, &sock_addr.sin6_addr) != 1)
         {
+            fprintf(stderr, "failed to parse Ipv6");
             close(server->socket);
             exit(EXIT_FAILURE);
         }
@@ -69,6 +70,7 @@ struct Server* server_init(
 
         if ((bin == -1) || (lis == -1))
         {
+            fprintf(stderr, "failed either bind or listen");
             close(server->socket);
             exit(EXIT_FAILURE);
         }
@@ -91,6 +93,7 @@ struct Server* server_init(
             sock_addr.sin_addr.s_addr = INADDR_ANY;
         else if (inet_pton(AF_INET, ip, &(sock_addr.sin_addr)) != 1)
         {
+            fprintf(stderr, "failed to parse Ipv4");
             close(server->socket);
             exit(EXIT_FAILURE);
         }
@@ -100,6 +103,7 @@ struct Server* server_init(
 
         if ((bin == -1) || (lis == -1))
         {
+            fprintf(stderr, "failed either bind or listen");
             close(server->socket);
             exit(EXIT_FAILURE);
         }
