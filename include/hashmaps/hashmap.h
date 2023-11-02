@@ -14,7 +14,7 @@ struct Value
 {
     enum Route_type type;
     char* route;
-    char* (*fun) (char*);
+    uint8_t *(*fun) (char*);
     char* mime;
 };
 

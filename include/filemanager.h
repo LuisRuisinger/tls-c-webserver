@@ -5,6 +5,6 @@
 #ifndef WEBSERVER_C_FILEMANAGER_H
 #define WEBSERVER_C_FILEMANAGER_H
 
-char* request_file (char* filename);
+uint8_t * request_file (char* filename);
 
 #endif //WEBSERVER_C_FILEMANAGER_H

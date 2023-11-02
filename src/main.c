@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv)
 {
-    struct Server* server_ipv6 = server_init(HTTPS, IPv6, TESTIPV6, 8080);
+    struct Server* server_ipv6 = server_init(HTTP, IPv6, TESTIPV6, 8080);
     struct Hashmap* hashmap    = hashmap_init(16);
 
     hashmap->add_route("/", "../files/index.html", GET, STATICFILE, hashmap);

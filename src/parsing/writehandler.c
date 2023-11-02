@@ -132,9 +132,9 @@ int32_t write_client(struct Client* client, char* str_body, char* mime, Code cod
     strcat(response, "\r\n");
 
     if (client->protocol == HTTPS)
-        SSL_write(client->ssl, response, (int) strlen(response));
+        SSL_write(client->ssl, response, sizeof(response));
     else {
-        write(client->fd, response, (int) strlen(response));
+        write(client->fd, response, sizeof(response));
     }
 
     free(response);

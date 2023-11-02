@@ -41,6 +41,8 @@ void server_run(struct Server* server, struct Hashmap* hashmap)
         if (waiting == 0)
             continue;
 
+        fprintf(stdout, "client connected\n");
+
         memset(&client_sock_ipv6, 0, sizeof(client_sock_ipv6));
         memset(&client_sock_ipv4, 0, sizeof(client_sock_ipv4));
 

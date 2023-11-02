@@ -42,7 +42,7 @@ Reqparsestruct* read_client(client* client, hashmap* map)
 
     int8_t alloc_read = 1;
 
-    struct timeval timeout = {TIMEOUT, 0};
+    struct timeval timeout = {TIMEOUT + 20, 0};
     fd_set readfds;
 
     time_t start_time;
@@ -65,6 +65,8 @@ Reqparsestruct* read_client(client* client, hashmap* map)
         // timeout for sending empty requests
         //
 
+        fprintf(stdout, "reading from client with protocol %s\n", client->protocol == HTTPS ? "HTTPS" : "HTTP");
+
         FD_ZERO(&readfds);
         FD_SET(client->fd, &readfds);
 
@@ -72,6 +74,7 @@ Reqparsestruct* read_client(client* client, hashmap* map)
         {
             char* arr[] = {method, route, version, buffer};
             clean_mem(arr, 4);
+            fprintf(stdout, "triggered 1\n");
             return NULL;
         }
 
@@ -83,10 +86,12 @@ Reqparsestruct* read_client(client* client, hashmap* map)
             rval = SSL_read(client->ssl, buffer + total, BUFFER_SIZE * alloc_read - total);
         else {
             rval = read(client->fd, buffer + total, BUFFER_SIZE * alloc_read - total);
+            fprintf(stdout, "read from client\n");
         }
 
         if (rval == -1 || (int) difftime(start_time, time(NULL)) >= TIMEOUT)
         {
+            fprintf(stdout, "triggered 2\n");
             char* arr[] = {method, route, version, buffer};
             clean_mem(arr, 4);
             return NULL;
