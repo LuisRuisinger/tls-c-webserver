@@ -8,15 +8,13 @@
 
 #include "../include/filemanager.h"
 
-uint8_t *
-request_file(char *filename)
+uint8_t*
+request_file(char* filename)
 {
     if (!filename)
         return NULL;
 
-    int chr;
     FILE* file;
-
     if ((file = fopen(filename, "r")) < 0)
         return NULL;
 
@@ -24,15 +22,12 @@ request_file(char *filename)
     uint64_t len = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    uint8_t *str = calloc(len + 1, sizeof(uint8_t));
+    uint8_t* str = calloc(len + 1, sizeof(*str));
+    size_t   idx = 0;
+    int8_t   chr;
 
-#ifdef DEBUG
-    assert(str);
-#endif
-
-    int32_t i = 0;
     while((chr = fgetc(file)) != EOF)
-        str[i++] = (uint8_t ) chr & 0xFF;
+        str[idx++] = (uint8_t) chr & 0xFF;
 
     fclose(file);
     return str;

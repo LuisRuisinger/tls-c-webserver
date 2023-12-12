@@ -14,8 +14,8 @@
 
 void* request_handler(void* arg)
 {
-    struct Handler_arg* wrapper    = (struct Handler_arg*) arg;
-    Reqparsestruct* pstruct = read_client(wrapper->client, wrapper->hashmap);
+    struct Handler_arg* wrapper = (struct Handler_arg*) arg;
+    Reqparsestruct* pstruct     = read_client(wrapper->client, wrapper->hashmap);
 
     if (pstruct == NULL)
     {
